@@ -1,0 +1,9 @@
+*.pyc
+*.orig
+.DS_Store
+.vscode
+__pycache__
+projects.dat
+projects.yml
+projects.1.yml
+config.1.py
