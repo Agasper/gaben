@@ -143,12 +143,22 @@ public class BatchBuild
             options |= BuildOptions.AllowDebugging | BuildOptions.Development;
         if (profiler)
             options |= BuildOptions.ConnectWithProfiler;
+
+#if UNITY_2018_1_OR_NEWER
+        UnityEditor.Build.Reporting.BuildReport report = BuildPipeline.BuildPlayer(GetScenes(), path, target, options);
+
+        if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
+            EditorApplication.Exit(0);
+        else
+            EditorApplication.Exit(1);
+#else
         string error = BuildPipeline.BuildPlayer(GetScenes(), path, target, options);
 
         if (string.IsNullOrEmpty(error))
             EditorApplication.Exit(0);
         else
             EditorApplication.Exit(1);
+#endif
     }
 
     static string[] GetScenes()
