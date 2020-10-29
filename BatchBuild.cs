@@ -16,6 +16,7 @@ public class BatchBuild
     static string keyaliasName = "{KEY}";
     static string keyaliasPass = "{KEY_PWD}";
     static bool useAPKExpansionFiles = {SPLIT};
+    static bool splitByArchitecture = {SPLIT_ARCH};
     static bool development = {DEVELOPMENT};
     static bool profiler = {PROFILER};
 
@@ -35,6 +36,9 @@ public class BatchBuild
         }
 
         PlayerSettings.Android.useAPKExpansionFiles = useAPKExpansionFiles;
+#if UNITY_2018_2_OR_NEWER
+        PlayerSettings.Android.buildApkPerCpuArchitecture = splitByArchitecture;
+#endif
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
         SetScriptingBackend();

@@ -18,12 +18,12 @@ class Builder():
     def get_jobs(self):
         return self.project_builds
 
-    def start(self, project, branch, platform, s_backend, sign, split, keep_log, clean, build, version, development, profiler, data, callback):
+    def start(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback):
         for proj_builder in self.project_builds:
             if proj_builder.project.url.lower() == project.url.lower():
                 raise Exception("Project already in action")
 
-        proj_builder = ProjectBuilder(self, project, branch, platform, s_backend, sign, split, keep_log, clean, build, version, development, profiler, data, callback)
+        proj_builder = ProjectBuilder(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback)
         self.project_builds.append(proj_builder)
         proj_builder.build()
         
@@ -53,15 +53,17 @@ class Builder():
 
 
 class ProjectBuilder():
-    def __init__(self, parent, project, branch, platform, s_backend, sign, split, keep_log, clean, build, version, development, profiler, data, callback):
+    def __init__(self, parent, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback):
         self.parent = parent
         self.project = project
+        self.noupload = noupload
         self.branch = branch
         self.platform = platform
         self.s_backend = s_backend
         self.data = data
         self.sign = sign
         self.split = split
+        self.split_arch = split_arch
         self.keep_log = keep_log
         self.callback = callback
         self.clean = clean
@@ -153,6 +155,7 @@ class ProjectBuilder():
             text = text.replace("{KEY_PWD}", "")
 
         text = text.replace("{SPLIT}", str(self.split).lower())
+        text = text.replace("{SPLIT_ARCH}", str(self.split_arch).lower())
 
         with open(script_path, "w") as f:
             f.write(text)

@@ -172,6 +172,7 @@ jobs - show current tasks and projects statuses""")
         parser.add_argument("name", help="Name or url of the project")
         parser.add_argument("branch", help="Branch of the repositary")
         parser.add_argument("platform", help="Platform: " + ",".join(platforms))
+        parser.add_argument("--noupload", action="store_true", help="Don't upload build to Slack")
         parser.add_argument("--log", action="store_true", help="Always keep log, even if build was successful")
         parser.add_argument("--clean", action="store_true", help="Make a clean build (remove unity cache)")
         parser.add_argument("--backend", help="Override scripting backend: " + ",".join(scripting_backengs), default="")
@@ -180,7 +181,8 @@ jobs - show current tasks and projects statuses""")
         parser.add_argument("--development", action="store_true", help="Make a developement build (default is Release)")
         parser.add_argument("--profiler", action="store_true", help="Autoconnect profiler")
         parser.add_argument("--donotsign", action="store_true", help="(Android only) Do not sign build")
-        parser.add_argument("--split", action="store_true", help="(Android only) Split APK (default is single APK)")
+        parser.add_argument("--split", action="store_true", help="(Android only) Split APK & OBB (default is single APK)")
+        parser.add_argument("--split_arch", action="store_true", help="(Android only) Split APK  by target architecture")
         try:
             args = parser.parse_args(cmd)
             project = self.store.search(args.name)
@@ -188,12 +190,10 @@ jobs - show current tasks and projects statuses""")
                 raise Exception("Unknown platform %s. Possible options: %s" % (args.platform, ",".join(platforms)))
             if args.backend not in scripting_backengs and len(args.backend) > 0:
                 raise Exception("Unknown scripting backend %s. Possible options: %s" % (args.backend, ",".join(scripting_backengs)))
-            if args.backend == "il2cpp" and args.platform in ["Win", "Win64", "OSXUniversal", "Linux", "Linux64", "LinuxUniversal"]:
-                raise Exception("%s backend doesn't work on platform %s" % (args.backend, args.platform))
             if args.backend == "mono" and args.platform == "iOS":
                 raise Exception("%s backend doesn't work on platform %s" % (args.backend, args.platform))
-            self.builder.start(project, args.branch, args.platform, args.backend, not args.donotsign, \
-                    args.split, args.log, args.clean, args.build, args.version, args.development, args.profiler, data, self.builder_callback)
+            self.builder.start(project, args.branch, args.platform, args.noupload, args.backend, not args.donotsign, \
+                    args.split, args.split_arch, args.log, args.clean, args.build, args.version, args.development, args.profiler, data, self.builder_callback)
             self.send_msg(data, config.get_random_quote())
         except Exception as ex:
             self.send_msg(data, str(ex))
