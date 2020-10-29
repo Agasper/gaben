@@ -209,9 +209,13 @@ jobs - show current tasks and projects statuses""")
             result += "*%s* -> %s\r\n" % (job.project.name, str(job.pipeline.get_current_job()) if job.pipeline is not None else "Finishing")
         self.send_msg(data, result)
 
-    def builder_callback(self, data, project, status, file_path):
+    def builder_callback(self, data, project, status, file_path, noupload):
         size = os.path.getsize(file_path)
         MAX_MB = config.MAX_UPLOAD_SIZE_MB
+        if noupload:
+            self.send_msg(data, "Build completed! No upload flag is set, so grab your build locally in %s" % file_path)
+            return
+
         if size > 1024*1024*MAX_MB:
             self.send_msg(data, "Build completed, but it's exceeds %dMb size! :neutral_face:\nYou can grab build locally in %s" % (MAX_MB, file_path))
             return

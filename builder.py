@@ -190,7 +190,7 @@ class ProjectBuilder():
         else:
             build_path = self.build_log
             
-        self.callback(self.data, self.project, not pipeline.failed, build_path)
+        self.callback(self.data, self.project, not pipeline.failed, build_path, self.noupload)
         self.cleanup()
         self.parent.build_finished(self)
 
