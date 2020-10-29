@@ -119,7 +119,8 @@ class ProjectBuilder():
         version_file = os.path.join(self.project_dir, "ProjectSettings", "ProjectVersion.txt")
         with open(version_file, "r") as f:
             content = f.read()
-        splitted = content.split(":")
+        lines = content.splitlines()
+        splitted = lines[0].split(":")
         unity_version = splitted[1].strip()
 
         if unity_version not in config.UNITY:
