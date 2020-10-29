@@ -220,16 +220,20 @@ jobs - show current tasks and projects statuses""")
             self.send_msg(data, "Build completed, but it's exceeds %dMb size! :neutral_face:\nYou can grab build locally in %s" % (MAX_MB, file_path))
             return
 
-        print("Uploading file...")
-        with open(file_path, "rb") as f:
-            self.slack.api_call(
-                'files.upload', 
-                channels=data["channel"], 
-                as_user=True, 
-                filename=os.path.basename(file_path), 
-                file=f,
-            )
-        print("Uploading done!")
+        try:
+            with open(file_path, "rb") as f:
+                self.slack.api_call(
+                    'files.upload', 
+                    channels=data["channel"], 
+                    as_user=True, 
+                    filename=os.path.basename(file_path), 
+                    file=f,
+                )
+        except Exception as ex:
+            print("Failed to upload file to slack: %s" % str(ex))
+            self.send_msg(data, "Failed to upload build to Slack, grab the build locally in %s" % file_path)
+            return
+
         if status:
             self.send_msg(data, "Build of %s completed! :+1:" % project.name)
         else:
