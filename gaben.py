@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from slackclient import SlackClient
 from store import Store, Project
 from builder import Builder
 from io import StringIO
 from args import ArgumentParser
+from slackclient import SlackClient
 
 import time
 import re
@@ -183,6 +183,7 @@ jobs - show current tasks and projects statuses""")
         parser.add_argument("--donotsign", action="store_true", help="(Android only) Do not sign build")
         parser.add_argument("--split", action="store_true", help="(Android only) Split APK & OBB (default is single APK)")
         parser.add_argument("--split_arch", action="store_true", help="(Android only) Split APK  by target architecture")
+        parser.add_argument("--build_with_method", default="", help="Set custom building method")
         try:
             args = parser.parse_args(cmd)
             project = self.store.search(args.name)
@@ -193,7 +194,7 @@ jobs - show current tasks and projects statuses""")
             if args.backend == "mono" and args.platform == "iOS":
                 raise Exception("%s backend doesn't work on platform %s" % (args.backend, args.platform))
             self.builder.start(project, args.branch, args.platform, args.noupload, args.backend, not args.donotsign, \
-                    args.split, args.split_arch, args.log, args.clean, args.build, args.version, args.development, args.profiler, data, self.builder_callback)
+                    args.split, args.split_arch, args.log, args.clean, args.build, args.version, args.development, args.profiler, args.build_with_method, data, self.builder_callback)
             self.send_msg(data, config.get_random_quote())
         except Exception as ex:
             self.send_msg(data, str(ex))

@@ -19,6 +19,7 @@ public class BatchBuild
     static bool splitByArchitecture = {SPLIT_ARCH};
     static bool development = {DEVELOPMENT};
     static bool profiler = {PROFILER};
+    static string buildWithMethod = "{BUILD_WITH_METHOD}";
 
     static void BuildAndroid()
     {
@@ -47,7 +48,7 @@ public class BatchBuild
 
         string path = Path.Combine(outputProjectsFolder, 
                                    string.Format("{0}_{1}.apk", PlayerSettings.applicationIdentifier, PlayerSettings.bundleVersion));
-        Build(path, BuildTarget.Android);
+        Build(path, BuildTarget.Android, GetOptions(), GetScenes());
     }
 
     static void BuildWin()
@@ -56,7 +57,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                                    string.Format("{0}.exe", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneWindows);
+        Build(path, BuildTarget.StandaloneWindows, GetOptions(), GetScenes());
     }
     static void BuildWin64()
     {
@@ -64,7 +65,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                                     string.Format("{0}.exe", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneWindows64);
+        Build(path, BuildTarget.StandaloneWindows64, GetOptions(), GetScenes());
     }
 
     static void BuildOSXUniversal()
@@ -76,7 +77,7 @@ public class BatchBuild
 #if UNITY_2017_3_OR_NEWER
         Build(path, BuildTarget.StandaloneOSX);
 #else
-        Build(path, BuildTarget.StandaloneOSXUniversal);
+        Build(path, BuildTarget.StandaloneOSXUniversal, GetOptions(), GetScenes());
 #endif
     }
 
@@ -86,7 +87,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinux);
+        Build(path, BuildTarget.StandaloneLinux, GetOptions(), GetScenes());
     }
 
     static void BuildLinux64()
@@ -95,7 +96,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinux64);
+        Build(path, BuildTarget.StandaloneLinux64, GetOptions(), GetScenes());
     }
 
     static void BuildLinuxUniversal()
@@ -104,7 +105,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinuxUniversal);
+        Build(path, BuildTarget.StandaloneLinuxUniversal, GetOptions(), GetScenes());
     }
 
     static void BuildiOS()
@@ -114,11 +115,20 @@ public class BatchBuild
             EditorUserBuildSettings.iOSBuildConfigType = iOSBuildType.Debug;
         SetScriptingBackend();
         SetVersions();
-        Build(outputProjectsFolder, BuildTarget.iOS);
+        Build(outputProjectsFolder, BuildTarget.iOS, GetOptions(), GetScenes());
     }
 
 
+    static BuildOptions GetOptions()
+    {
+        BuildOptions options = BuildOptions.None;
+        if (development)
+            options |= BuildOptions.AllowDebugging | BuildOptions.Development;
+        if (profiler)
+            options |= BuildOptions.ConnectWithProfiler;
 
+        return options;
+    }
 
     static void SetScriptingBackend()
     {
@@ -140,23 +150,42 @@ public class BatchBuild
             PlayerSettings.bundleVersion = overrideVersion;
     }
 
-    static void Build(string path, BuildTarget target)
+    static void Build(string path, BuildTarget target, BuildOptions options, string[] scenes)
     {
-        BuildOptions options = BuildOptions.None;
-        if (development)
-            options |= BuildOptions.AllowDebugging | BuildOptions.Development;
-        if (profiler)
-            options |= BuildOptions.ConnectWithProfiler;
+        if (!string.IsNullOrEmpty(buildWithMethod))
+        {
+            string[] splitted = buildWithMethod.Split('.');
+            if (splitted.Length < 2)
+                throw new System.ArgumentException("Build with method should be in format Namespace.Class.Method");
+            string cls = string.Join(".", splitted.Take(splitted.Length - 1));
+            string method = splitted[splitted.Length - 1];
+            Type type = Type.GetType(cls, false, false);
+            if (type == null)
+                throw new System.ArgumentException($"Build with method class {cls} not found");
+
+            MethodInfo methodInfo = type.GetMethod(method,
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
+            if (methodInfo == null)
+                throw new System.ArgumentException($"Build with method {method} not found in class {cls}. It should be static");
+            
+            
+            if ((bool)methodInfo.Invoke(null, path, target, options, scenes))
+                EditorApplication.Exit(0);
+            else
+                EditorApplication.Exit(1);
+
+            return;
+        }
 
 #if UNITY_2018_1_OR_NEWER
-        UnityEditor.Build.Reporting.BuildReport report = BuildPipeline.BuildPlayer(GetScenes(), path, target, options);
+        UnityEditor.Build.Reporting.BuildReport report = BuildPipeline.BuildPlayer(scenes, path, target, options);
 
         if (report.summary.result == UnityEditor.Build.Reporting.BuildResult.Succeeded)
             EditorApplication.Exit(0);
         else
             EditorApplication.Exit(1);
 #else
-        string error = BuildPipeline.BuildPlayer(GetScenes(), path, target, options);
+        string error = BuildPipeline.BuildPlayer(scenes, path, target, options);
 
         if (string.IsNullOrEmpty(error))
             EditorApplication.Exit(0);

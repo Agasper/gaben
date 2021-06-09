@@ -18,12 +18,12 @@ class Builder():
     def get_jobs(self):
         return self.project_builds
 
-    def start(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback):
+    def start(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, build_with_method, data, callback):
         for proj_builder in self.project_builds:
             if proj_builder.project.url.lower() == project.url.lower():
                 raise Exception("Project already in action")
 
-        proj_builder = ProjectBuilder(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback)
+        proj_builder = ProjectBuilder(self, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, build_with_method, data, callback)
         self.project_builds.append(proj_builder)
         proj_builder.build()
         
@@ -53,7 +53,7 @@ class Builder():
 
 
 class ProjectBuilder():
-    def __init__(self, parent, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, data, callback):
+    def __init__(self, parent, project, branch, platform, noupload, s_backend, sign, split, split_arch, keep_log, clean, build, version, development, profiler, build_with_method, data, callback):
         self.parent = parent
         self.project = project
         self.noupload = noupload
@@ -71,6 +71,7 @@ class ProjectBuilder():
         self.version = version
         self.development = development
         self.profiler = profiler
+        self.build_with_method = build_with_method
 
         self.temp_dir = self.parent.get_project_temp_dir(self.project.url)
         self.project_dir = self.parent.get_project_dir(self.project.url, platform)
@@ -143,6 +144,7 @@ class ProjectBuilder():
         text = text.replace("{VERSION}", self.version)
         text = text.replace("{DEVELOPMENT}", str(self.development).lower())
         text = text.replace("{PROFILER}", str(self.profiler).lower())
+        text = text.replace("{BUILD_WITH_METHOD}", str(self.build_with_method))
 
         if self.sign:
             text = text.replace("{KEYSTORE}", keystore_path.replace("\\", "/"))
