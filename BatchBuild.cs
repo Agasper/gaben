@@ -48,7 +48,7 @@ public class BatchBuild
 
         string path = Path.Combine(outputProjectsFolder, 
                                    string.Format("{0}_{1}.apk", PlayerSettings.applicationIdentifier, PlayerSettings.bundleVersion));
-        Build(path, BuildTarget.Android, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.Android, GetOptions(), GetScenes());
     }
 
     static void BuildWin()
@@ -57,7 +57,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                                    string.Format("{0}.exe", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneWindows, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneWindows, GetOptions(), GetScenes());
     }
     static void BuildWin64()
     {
@@ -65,7 +65,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                                     string.Format("{0}.exe", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneWindows64, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneWindows64, GetOptions(), GetScenes());
     }
 
     static void BuildOSXUniversal()
@@ -75,9 +75,9 @@ public class BatchBuild
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}.app", PlayerSettings.productName));
 #if UNITY_2017_3_OR_NEWER
-        Build(path, BuildTarget.StandaloneOSX);
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneOSX);
 #else
-        Build(path, BuildTarget.StandaloneOSXUniversal, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneOSXUniversal, GetOptions(), GetScenes());
 #endif
     }
 
@@ -87,7 +87,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinux, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneLinux, GetOptions(), GetScenes());
     }
 
     static void BuildLinux64()
@@ -96,7 +96,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinux64, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneLinux64, GetOptions(), GetScenes());
     }
 
     static void BuildLinuxUniversal()
@@ -105,7 +105,7 @@ public class BatchBuild
         SetVersions();
         string path = Path.Combine(outputProjectsFolder, 
                             string.Format("{0}", PlayerSettings.productName));
-        Build(path, BuildTarget.StandaloneLinuxUniversal, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, path, BuildTarget.StandaloneLinuxUniversal, GetOptions(), GetScenes());
     }
 
     static void BuildiOS()
@@ -115,7 +115,7 @@ public class BatchBuild
             EditorUserBuildSettings.iOSBuildConfigType = iOSBuildType.Debug;
         SetScriptingBackend();
         SetVersions();
-        Build(outputProjectsFolder, BuildTarget.iOS, GetOptions(), GetScenes());
+        Build(outputProjectsFolder, outputProjectsFolder, BuildTarget.iOS, GetOptions(), GetScenes());
     }
 
 
@@ -150,7 +150,7 @@ public class BatchBuild
             PlayerSettings.bundleVersion = overrideVersion;
     }
 
-    static void Build(string path, BuildTarget target, BuildOptions options, string[] scenes)
+    static void Build(string outputDirectory, string path, BuildTarget target, BuildOptions options, string[] scenes)
     {
         if (!string.IsNullOrEmpty(buildWithMethod))
         {
@@ -169,7 +169,7 @@ public class BatchBuild
                 throw new System.ArgumentException($"Build with method {method} not found in class {cls}. It should be static");
             
             
-            if ((bool)methodInfo.Invoke(null, path, target, options, scenes))
+            if ((bool)methodInfo.Invoke(null, outputDirectory, target, options, scenes))
                 EditorApplication.Exit(0);
             else
                 EditorApplication.Exit(1);
